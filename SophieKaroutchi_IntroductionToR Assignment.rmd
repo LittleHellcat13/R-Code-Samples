@@ -1,0 +1,157 @@
+---
+title: "Assignment R course June 2024"
+author: "Renee Menezes and Renaud Tissier"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
+```
+
+
+Dear Participant,
+
+The primary goal of the assignment is to create a situation that you are likely to encounter in practice when analysing your own data. You have tasks related to practical questions, and need to fill in text and code in the R Markdown document below.  Use the `Knit` button to generate the `html` report. You may do this every time you complete a task, to check regularly if your answers compile correctly, or once at the end. 
+
+Please send an email entitled "Introduction to R exam" to [biostatistics@nki.nl](mailto:biostatistics@nki.nl) with your R Markdown document attached. Do not send the `html`! 
+
+You receive one point if we can knit your R Markdown successfully. For each task successfully completed, you will get an additional point. The sum of all your points is your final score. The score is then normalized together with all other scores.
+
+During the exam you are allowed to use the course materials or other resources available online, but it is not allowed to ask other individuals for help (by any means of communication). Please make sure that, if you use a solution found online, that you understand the steps you take. 
+
+Before starting the exam: close the course Project (via File > Close project) and then open this file. Save this file with a new name including your own name. Then fill in your answers.
+
+Good luck!
+
+
+
+
+## 1  Number of breaks in yarn during weaving
+
+### 1.1
+
+Check the structure and the class of the data `warpbreaks`. Also, print  10 first rows of the data and check its help file to find out more about the data set.
+
+```{r}
+str(warpbreaks)
+class(warpbreaks)
+head(warpbreaks, 10)
+?warpbreaks
+```
+
+### 1.2
+
+Make a boxplot of the variable `breaks` in `warpbreaks`.
+
+
+```{r}
+boxplot(warpbreaks$breaks)
+```
+
+### 1.3
+
+Make boxplots of `breaks` according to the groups defined by `wool`, as well as boxplots according to the groups defined by `tension`. Use the formula syntax here.
+
+```{r}
+boxplot(warpbreaks$breaks~warpbreaks$wool, data=warpbreaks)
+boxplot(warpbreaks$breaks~warpbreaks$tension, data=warpbreaks)
+
+```
+
+### 1.4
+
+Make boxplots of `breaks` according to the groups defined by combinations of `wool` and `tension`. Use the formula syntax here.
+
+```{r}
+data(warpbreaks)
+
+boxplot(warpbreaks$breaks~warpbreaks$wool+warpbreaks$tension)
+```
+
+### 1.5
+
+Compute the median of `breaks` per group defined by `tension`. Hint: use `tapply`.
+
+```{r}
+tapply(warpbreaks$breaks, INDEX = warpbreaks$tension, FUN = median)
+```
+
+### 1.6
+
+Compare the number of `breaks` in each group defined by `wool` using a Student's-t test. Extract  the p-value of the test and save it in a separate variable.
+
+```{r}
+t.test(warpbreaks$breaks ~ warpbreaks$wool, data = warpbreaks)
+
+p_value <- t.test(warpbreaks$breaks ~ warpbreaks$wool, data = warpbreaks)$p.value
+p_value
+
+```
+
+### 1.7
+
+Add the extracted p-value to the text below as in-line R code.
+
+We compared the number of breaks in groups for different wool types with a Student's-t test (p = `r p_value` ).
+
+
+## 2. US state facts and figures
+
+In the `state` dataset, the object `state.x77` is included. It contains information about population, income and other variables on 50 different US states, mostly dating from the 1970s.
+
+### 2.1 
+
+Check the class and dimensions of `state.x77`.
+
+```{r}
+class(state.x77)
+dim(state.x77)
+```
+
+### 2.2
+
+Make a histogram of the variable `Income` of `state.x77`.
+ 
+```{r}
+hist(state.x77[,"Income"])
+
+```
+
+### 2.3
+
+Write a function to make a scatterplot of `Income` against any other variable in `state.x77`. When selecting the variable to be plotted, use the variable name. Include in the plot the variable name (say, as the label of the y-axis, `ylab`).
+
+```{r}
+Y  <- function (X) {
+  plot (state.x77[,"Income"],state.x77[,X], ylab=X, xlab="Income")
+}
+Y ("Murder")
+
+```
+
+### 2.4
+
+Create a vector with all variable names in `state.x77`, except for `Income`.
+
+```{r}
+x <- colnames(state.x77)
+y <- x [x != "Income"]
+x
+y
+```
+
+### 2.5
+
+Use `sapply()` and the answers from the previous questions to produce scatterplots of `Income` and each of all other variables in `state.x77`, except for `Income` itself. 
+
+```{r}
+sapply(y, Y)
+```
+
+
+
+
+
+
+

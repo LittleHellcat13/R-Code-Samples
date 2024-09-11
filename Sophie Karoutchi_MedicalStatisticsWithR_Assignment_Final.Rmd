@@ -1,0 +1,242 @@
+---
+title: "Medical Statistics with R course - assignment"
+author: "Sophie Karoutchi"
+date: "`r Sys.Date()`"
+output: 
+ html_document:
+     number_sections: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+
+Dear Participant,
+
+The primary goal of the assignment is to create a situation that you are likely to encounter in practice when analysing your own data. You have tasks related to practical questions, and need to fill in text and code in the R Markdown document below.  Use the `Knit` button to generate the `html` report. You may do this every time you complete a task, to check regularly if your answers compile correctly, or once at the end. 
+
+Please send an email entitled "Introduction to R exam" to [biostatistics@nki.nl](mailto:biostatistics@nki.nl) with your R Markdown document attached. Do not send the `html`! 
+
+You receive one point if we can knit your R Markdown successfully. For each task successfully completed, you will get an additional point. The sum of all your points is your final score. The score is then normalized together with all other scores.
+
+During the exam you are allowed to use the course materials or other resources available online, but it is not allowed to ask other individuals for help (by any means of communication). Please make sure that, if you use a solution found online, that you understand the steps you take. 
+
+Before starting the exam: close the course Project (via File > Close project) and then open this file. Save this file with a new name including your own name, and include your name in the "author" field in the header. Then fill in your answers.
+
+Good luck!
+
+
+# Number of breaks in yarn during weaving
+
+In this dataset the number of breaks in yarn is studied, as a function of tension and wool type.
+
+## Check distribution with graphs
+
+Check the empirical distribution of the number of breaks for the entire data with graphs, including comparing it to the normal distribution.
+
+```{r}
+data('warpbreaks')
+str(warpbreaks)
+class(warpbreaks)
+summary(warpbreaks)
+
+# Histogram with density plot
+hist(warpbreaks$breaks, breaks=20, probability=TRUE, main="Histogram and Density Plot of Breaks", xlab="Number of Breaks")
+lines(density(warpbreaks$breaks), col="red", lwd=1)
+
+# Overlay normal distribution for comparison
+mean_breaks <- mean(warpbreaks$breaks)
+sd_breaks <- sd(warpbreaks$breaks)
+curve(dnorm(x, mean=mean_breaks, sd=sd_breaks), add=TRUE, col="green", lwd=1)
+
+# Q-Q plot
+qqnorm(warpbreaks$breaks, main="Q-Q Plot of Breaks")
+qqline(warpbreaks$breaks, col="blue")
+
+# Shapiro-Wilk normality test
+shapiro <- shapiro.test(warpbreaks$breaks)
+shapiro
+```
+
+
+## Test normality
+
+Make a statistical test to check if the distribution of the number of breaks is likely to be a normal distribution. State the null hypothesis and the alternative hypothesis of the test. Add your conclusions based on the test result. Hint: use the Kolmogorov-Smirnov test via the function `ks.test()`. Check the help file of the function, to see how you indicate that you wish to compare the empirical distribution to the normal, which can be assessed by `pnorm` in R.
+
+```{r}
+#H0 = number of breaks follows a normal distribution
+#H1 = number of breaks follows a normal distribution
+mean_breaks <- mean(warpbreaks$breaks)
+sd_breaks <- sd(warpbreaks$breaks)
+ks_test <- ks.test(warpbreaks$breaks, "pnorm", mean=mean_breaks, sd=sd_breaks)
+print(ks_test)
+
+```
+====> The p-value is `r ks_test$p.value`. As it is > 0.05, we cannot reject H0 ====> there is not enough evidence to say that the distribution of the number of breaks is not normal, which aligns with the Shapiro-Wilkes results.
+
+## Test if number of breaks differs between wool groups
+
+Perform a suitable statistical test to compare the numbers of breaks between wool types. Justify your choice of statistical test. State the null and alternative hypotheses. Based on the test result, what do you conclude?
+
+```{r}
+#Based on the Kolmogorov-Smirnov and Shapiro-Wilkes tests, we can assume normality of the distribution and thus we can use a two-sample t-test to compare the means of two independent groups (A and B) as it assumes that the data is normally distributed within each group. 
+
+t_test_result <- t.test(breaks ~ wool, data = warpbreaks)
+t_test_result
+```
+====> As p-value > 0.05 we cannot reject the null hypothesis (there is no significant difference in the means of breaks between wool types).
+
+
+## Test if numbers of breaks differ between tension groups
+
+Choose a statistical test to compare the numbers of breaks between tension groups. Justify your choice of statistical test. State the null and alternative hypotheses. Based on the test result, what do you conclude?
+
+```{r}
+# To compare the means of three or more independent groups, we could use a one-way ANOVA assuming that the data within each group is normally distributed and that the variances across the groups are equal.
+
+anova_result <- aov(breaks ~ tension, data = warpbreaks)
+summary(anova_result)
+
+```
+====> With a very small p.value (= 0.00175), we can reject the null hypothesis: there is a significant difference in the number of breaks function of the tension groups.
+
+## Breaks explained by both tension and wool
+
+The number of breaks is a counting variable. As such, it is likely to follow a Poisson distribution. Use an adequate regression model to study how the number of breaks varies as a function of groups defined by tension and wool. Print the summary of the model fit. What do you conclude about the effect of different tensions and of different wool types on the number of breaks?
+
+```{r}
+# Fit a Poisson regression model
+poisson_model <- glm(breaks ~ tension + wool, data = warpbreaks, family = poisson())
+
+# Print the summary of the model fit
+summary(poisson_model)
+```
+====> Effect of Tension: the difference in the number of breaks between high tension and low tension groups is statistically significant (p-value = 0.0042). High tension = fewer breaks compared to low tension. The difference between medium tension and low tension is also significant, but less so (p-value = 0.0563): it could suggest a possible less breaks for medium tension compared to low tension, but this is not as strong as the effect of high tension.
+
+====> Effect of Wool Type: the difference in the number of breaks between wool types A and B (p-value = 0.0463) is statistically significant (fewer breaks with wool B than with wool A).
+
+====> Both the tension and wool type significantly affect the number of breaks in the dataset, with higher tension and wool type B associated with fewer breaks.
+
+
+## Relative risks
+
+Extract the coefficient estimates from the summary fit above for wool and tension, as well as p-values. Then compute the relative risks of breaks according to the different groups, compared to the reference category.
+
+```{r}
+# summary of model fit
+
+summary_fit <- summary(poisson_model)
+
+# Extract coefficients and p-values
+coefficients <- summary_fit$coefficients
+coefficients
+
+coefficients[,1]<- exp(coefficients[, "Estimate"])
+
+# Calculate the relative risks of breaking function of the different groups, compared to the reference category
+
+relative_risks <- exp(coefficients[, "Estimate"])
+relative_risks
+
+
+```
+
+## Inline R code
+
+Complete the text below using inline R code. Round off the estimates to 3 decimal places.
+
+The relative risk of breaks of Wool A compared to Wool B is estimated as  with a corresponding p-value equal to .
+The estimate of the relative risk of breaks for Wool A compared to Wool B is `r round(coefficients [4, 1], 3)`, with a corresponding p-value equal to `r round(coefficients[4, 4], 3)`.
+
+
+# Veteran data
+
+The veteran dataset is available after loading the survival package. Check the help file for veteran to understand the variables included.
+
+```{r}
+
+library(survival)
+veteran
+
+```
+
+```{r}
+str(veteran)
+summary(veteran)
+```
+
+## Tabulate treatment and events
+
+Make a table of the number of events per treatment group. From the table, are there enough events per treatment group to support a survival regression analysis of the data?
+
+```{r}
+
+events_per_group <- table (veteran$trt, veteran$status)
+events_per_group
+```
+
+===> There are similar numbers in each group. If any treatment group had a very low number of deaths, it might be challenging to draw reliable conclusions from a survival regression model, but both treatment groups have 64 deaths each making a survivak regression analysis of the data possible.
+
+## Kaplan-Meier plot per treatment group
+
+Define the survival response and make a Kaplan-Meier plot of the survival probability estimates, separately per treatment group.
+
+```{r}
+
+# Plot of the Kaplan-Meier curves
+# Creating a survfit object that compares the two groups
+veteran.fit <- survfit(Surv(veteran$time) ~ trt, data = veteran)
+plot(veteran.fit)
+
+# Compute Kaplan-Meier survival curves per treatment group
+km_fit <- survfit(Surv(veteran$time) ~ veteran$trt, data = veteran)
+
+# Plot Kaplan-Meier curves
+plot(km_fit, col = 1:length(km_fit$surv), lty = 1:length(km_fit$surv), 
+     xlab = "Time", ylab = "Survival Probability",
+     main = "Kaplan-Meier Survival Curves by Treatment Group")
+
+
+```
+
+## Log-rank test
+
+Perform a log-rank test to compare the survival probabilities from the two treatment groups. What do you conclude from this test?
+
+```{r}
+logrank_test <- survdiff(formula = Surv(veteran$time)~ veteran$trt)
+logrank_test
+logrank_test$pvalue
+
+
+```
+====> The p-value is not significant (0.933 is greater than 0.05): there is no statistically significant difference in survival probabilities between the two treatment groups. 
+
+## Cox regression
+
+We now would like to study the survival probabilities given treatment, Karnofsky performance score and age. For this, fit a Cox regression model to the data. What do you conclude about the impacts of treatment, Karnofsky performance and age on the survival probability?
+
+```{r}
+veteran
+
+# Fitting Cox regression model
+cox_model <- coxph(Surv(veteran$time, veteran$status) ~ veteran$trt + veteran$karno + veteran$age, data = veteran)
+summary(cox_model)
+
+```
+
+====> taking the Karnofsky score into account improves the fit of the model
+
+## Checking proportional hazards assumption
+
+Now perform a test to check if the proportional hazards assumptions hold for the covariates included in the regression model fitted in the previous question. State what the null and alternative hypotheses are. What do you conclude?
+
+```{r}
+cox_zph <- cox.zph(cox_model)
+print(cox_zph)
+```
+====> H0 no statistically signigicant improvement to the fit of the model when adding a given variable.
+====> based on the p.values above, the Karnofsky score is the only variable that when added improves the fit of the model (p < 0.05 = we can reject the null hypothesis, i.e. the model improves with the addition of this variable.)
+
