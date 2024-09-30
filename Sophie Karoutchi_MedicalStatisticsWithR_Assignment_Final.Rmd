@@ -67,7 +67,7 @@ Make a statistical test to check if the distribution of the number of breaks is 
 
 ```{r}
 #H0 = number of breaks follows a normal distribution
-#H1 = number of breaks follows a normal distribution
+#H1 = number of breaks does not follow a normal distribution
 mean_breaks <- mean(warpbreaks$breaks)
 sd_breaks <- sd(warpbreaks$breaks)
 ks_test <- ks.test(warpbreaks$breaks, "pnorm", mean=mean_breaks, sd=sd_breaks)
