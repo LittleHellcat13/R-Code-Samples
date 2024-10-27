@@ -146,7 +146,7 @@ y
 Use `sapply()` and the answers from the previous questions to produce scatterplots of `Income` and each of all other variables in `state.x77`, except for `Income` itself. 
 
 ```{r}
-sapply(y, Y)
+invisible(lapply(y, Y))
 ```
 
 
