@@ -158,7 +158,8 @@ The veteran dataset is available after loading the survival package. Check the h
 ```{r}
 
 library(survival)
-veteran
+# Sample of the veteran dataset
+head(veteran, 10)
 
 ```
 
