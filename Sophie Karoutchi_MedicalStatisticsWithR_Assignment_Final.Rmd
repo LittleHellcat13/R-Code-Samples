@@ -220,8 +220,6 @@ logrank_test$pvalue
 We now would like to study the survival probabilities given treatment, Karnofsky performance score and age. For this, fit a Cox regression model to the data. What do you conclude about the impacts of treatment, Karnofsky performance and age on the survival probability?
 
 ```{r}
-veteran
-
 # Fitting Cox regression model
 cox_model <- coxph(Surv(veteran$time, veteran$status) ~ veteran$trt + veteran$karno + veteran$age, data = veteran)
 summary(cox_model)
