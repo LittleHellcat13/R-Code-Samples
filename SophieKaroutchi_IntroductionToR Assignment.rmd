@@ -1,5 +1,5 @@
 ---
-title: "Assignment R course June 2024"
+title: "Introduction to R - Final Assignment June 2024"
 author: "Renee Menezes and Renaud Tissier"
 date: "`r Sys.Date()`"
 output: html_document
