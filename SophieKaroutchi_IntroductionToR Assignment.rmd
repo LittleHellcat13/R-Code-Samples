@@ -54,8 +54,8 @@ boxplot(warpbreaks$breaks)
 Make boxplots of `breaks` according to the groups defined by `wool`, as well as boxplots according to the groups defined by `tension`. Use the formula syntax here.
 
 ```{r}
-boxplot(warpbreaks$breaks~warpbreaks$wool, data=warpbreaks)
-boxplot(warpbreaks$breaks~warpbreaks$tension, data=warpbreaks)
+boxplot(breaks ~ wool, data = warpbreaks)
+boxplot(breaks ~ tension, data = warpbreaks)
 
 ```
 
